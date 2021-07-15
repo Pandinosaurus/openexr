@@ -19,9 +19,35 @@ endif()
 # configuration files
 #######################################
 
-include(cmake/OpenEXRVersion.cmake)
+project(OpenEXR VERSION 3.1.0 LANGUAGES C CXX)
 
-project(OpenEXR VERSION ${OPENEXR_VERSION} LANGUAGES C CXX)
+set(OPENEXR_VERSION_RELEASE_TYPE "-dev" CACHE STRING "Extra version tag string for OpenEXR build, such as -dev, -beta1, etc.")
+
+set(OPENEXR_VERSION ${OpenEXR_VERSION})
+set(OPENEXR_VERSION_API "${OpenEXR_VERSION_MAJOR}_${OpenEXR_VERSION_MINOR}")
+
+# Library/shared-object version using libtool versioning policy.
+# See https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+#
+# Library API version (CMake's library VERSION attribute) is of the
+# form CURRENT.REVISION.AGE; the CMake SOVERSION attribute corresonds
+# to just CURRENT. These produce a .so and a symlink symlink, e.g.:
+# libOpenEXR-3_1.so.29 -> libOpenEXR-3_1.so.29.0.0
+#                    ^                       ^ ^ ^
+#                    |                       | | |
+#                    CURRENT                 | | AGE
+#                                            | REVISION 
+#                                            CURRENT
+# When updating:
+#   1. no API change: CURRENT.REVISION+1.AGE
+#   2. API added:     CURRENT+1.0.AGE+1
+#   3. API changed:   CURRENT+1.0.0
+#
+set(OPENEXR_LIBTOOL_CURRENT 29)
+set(OPENEXR_LIBTOOL_REVISION 0)
+set(OPENEXR_LIBTOOL_AGE 0)
+set(OPENEXR_LIB_VERSION "${OPENEXR_LIBTOOL_CURRENT}.${OPENEXR_LIBTOOL_REVISION}.${OPENEXR_LIBTOOL_AGE}")
+set(OPENEXR_LIB_SOVERSION ${OPENEXR_LIBTOOL_CURRENT})
 
 option(OPENEXR_INSTALL "Install OpenEXR libraries" ON)
 option(OPENEXR_INSTALL_TOOLS "Install OpenEXR tools" ON)
@@ -32,6 +58,8 @@ endif()
 include(cmake/LibraryDefine.cmake)
 include(cmake/OpenEXRSetup.cmake)
 add_subdirectory(cmake)
+
+message(STATUS "Configure ${OPENEXR_PACKAGE_NAME}, library API version: ${OPENEXR_LIB_VERSION}")
 
 # Hint: This can be set to enable custom find_package
 # search paths, probably best to set it when configuring
